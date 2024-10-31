@@ -1,9 +1,22 @@
+const helmet = require('helmet');
+const morgan = require('morgan')
 const Joi = require("joi");
+const authenticator = require('./authenticator')
+const logger = require('./logger') 
 
 const express = require("express");
 const app = express()
 
+app.use(helmet())
+app.use(morgan('tiny'))
 app.use(express.json())
+
+app.use(express.urlencoded( {extended:true} ));
+app.use(express.static('./public'));
+
+app.use(logger)
+
+app.use(authenticator)
 
 const courses = [
     {id:1,name:"course1"},
@@ -62,11 +75,6 @@ function validateCourses(course){
    
 }
 
-
-
-
-
-
 app.delete('/api/courses/:id',(req,res) => {
     //check if the course exist
    const course = courses.find(c => c.id === parseInt (req.params.id))
@@ -77,17 +85,6 @@ app.delete('/api/courses/:id',(req,res) => {
     res.send(course)
 
 })
-
-
-
-
-
-
-
-
-
-
-
 
 
 const port= process.env.PORT || 3000
