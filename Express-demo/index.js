@@ -1,8 +1,9 @@
+const config =  require('config')
 const helmet = require('helmet');
 const morgan = require('morgan')
 const Joi = require("joi");
 const authenticator = require('./authenticator')
-const logger = require('./logger') 
+const logger = require('./logger')
 
 const express = require("express");
 const app = express()
@@ -10,13 +11,18 @@ const app = express()
 app.use(helmet())
 app.use(morgan('tiny'))
 app.use(express.json())
-
 app.use(express.urlencoded( {extended:true} ));
 app.use(express.static('./public'));
-
 app.use(logger)
-
 app.use(authenticator)
+
+console.log('Application name: ' + config.get('name'));
+console.log('Mail server: '+ config.get('mail.host'))
+console.log('Mail password: ' + config.get('mail.password'))
+if(app.get('env')==='development'){
+    app.use(morgan('tiny'))
+    console.log("morgan enabled")
+}
 
 const courses = [
     {id:1,name:"course1"},
@@ -32,7 +38,6 @@ app.get ('/api/courses/:id',(req,res)  => {
    if(!course) return res.status(404).send("the course of the Id hasn't been found")
    res.send(course);
 })
-
 
 app.post('/api/courses', (req,res) => {
     const {error} = validateCourses(req.body);
@@ -69,10 +74,7 @@ function validateCourses(course){
     const schema = Joi.object({
         name:Joi.string().min(3).required()
     });
-    return schema.validate(course)
-
-    
-   
+    return schema.validate(course)   
 }
 
 app.delete('/api/courses/:id',(req,res) => {
@@ -83,10 +85,8 @@ app.delete('/api/courses/:id',(req,res) => {
     const index = courses.indexOf(course);
     courses.splice(index,1)
     res.send(course)
-
 })
 
 
 const port= process.env.PORT || 3000
-
 app.listen (port,() => console.log(`port listening on ${port}`));
